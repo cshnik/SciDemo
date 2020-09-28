@@ -3,17 +3,25 @@
 
 #include "framework.h"
 #include "SciDemo.h"
+#include "SciCall.h"
 
 #define MAX_LOADSTRING 100
+#define WINDOW_SIZE     400
+#define IDC_EDIT        0xFB03
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
+HANDLE g_hScintilla = NULL;
+int iDefaultCodePage = 0;
+
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
+HWND                EditCreate(HWND hwndParent);
+void                InitDemoSettings();
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
@@ -97,18 +105,61 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Store instance handle in our global variable
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, CW_USEDEFAULT, 400, 400, nullptr, nullptr, hInstance, nullptr);
+   Scintilla_RegisterClasses(hInstance);
+
+   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+      CW_USEDEFAULT, CW_USEDEFAULT, WINDOW_SIZE, WINDOW_SIZE, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
       return FALSE;
    }
 
+   HWND hwndEdit = EditCreate(hWnd);
+   InitScintillaHandle(hwndEdit);
+
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
    return TRUE;
+}
+
+HWND EditCreate(HWND hwndParent)
+{
+   const HWND hwnd = CreateWindowEx(
+      WS_EX_CLIENTEDGE,
+      L"Scintilla",
+      NULL,
+      WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,
+      0, 0, WINDOW_SIZE, WINDOW_SIZE,
+      hwndParent,
+      (HMENU)IDC_EDIT,
+      hInst,
+      NULL);
+
+   SendMessage(hwnd, SCI_SETCODEPAGE, iDefaultCodePage, 0);
+   SendMessage(hwnd, SCI_SETEOLMODE, SC_EOL_CRLF, 0);
+   SendMessage(hwnd, SCI_SETPASTECONVERTENDINGS, 1, 0);
+   SendMessage(hwnd, SCI_USEPOPUP, FALSE, 0);
+   SendMessage(hwnd, SCI_SETSCROLLWIDTH, 2048, 0);
+   SendMessage(hwnd, SCI_SETSCROLLWIDTHTRACKING, TRUE, 0);
+   SendMessage(hwnd, SCI_SETENDATLASTLINE, TRUE, 0);
+   SendMessage(hwnd, SCI_SETCARETSTICKY, FALSE, 0);
+   SendMessage(hwnd, SCI_SETXCARETPOLICY, CARET_SLOP | CARET_EVEN, 50);
+   SendMessage(hwnd, SCI_SETYCARETPOLICY, CARET_EVEN, 0);
+   SendMessage(hwnd, SCI_SETMULTIPLESELECTION, FALSE, 0);
+   SendMessage(hwnd, SCI_SETADDITIONALSELECTIONTYPING, FALSE, 0);
+   SendMessage(hwnd, SCI_SETVIRTUALSPACEOPTIONS, SCVS_NONE, 0);
+   SendMessage(hwnd, SCI_SETADDITIONALCARETSBLINK, FALSE, 0);
+   SendMessage(hwnd, SCI_SETADDITIONALCARETSVISIBLE, FALSE, 0);
+
+   InitDemoSettings();
+
+   return (hwnd);
+}
+
+void InitDemoSettings()
+{
 }
 
 //
