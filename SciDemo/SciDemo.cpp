@@ -4,9 +4,10 @@
 #include "framework.h"
 #include "SciDemo.h"
 #include "SciCall.h"
+#include "SciLexer.h"
 
 #define MAX_LOADSTRING 100
-#define WINDOW_SIZE     400
+#define WINDOW_SIZE     450
 #define IDC_EDIT        0xFB03
 
 // Global Variables:
@@ -21,7 +22,7 @@ int iDefaultCodePage = 0;
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 HWND                EditCreate(HWND hwndParent);
-void                InitDemoSettings();
+void                InitDemoSettings(HWND hwnd);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
@@ -131,7 +132,7 @@ HWND EditCreate(HWND hwndParent)
       L"Scintilla",
       NULL,
       WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,
-      0, 0, WINDOW_SIZE, WINDOW_SIZE,
+      0, 0, 0, 0,
       hwndParent,
       (HMENU)IDC_EDIT,
       hInst,
@@ -153,13 +154,31 @@ HWND EditCreate(HWND hwndParent)
    SendMessage(hwnd, SCI_SETADDITIONALCARETSBLINK, FALSE, 0);
    SendMessage(hwnd, SCI_SETADDITIONALCARETSVISIBLE, FALSE, 0);
 
-   InitDemoSettings();
+   InitDemoSettings(hwnd);
+
+   SetFocus(hwnd);
 
    return (hwnd);
 }
 
-void InitDemoSettings()
+void InitDemoSettings(HWND hwnd)
 {
+   SendMessage(hwnd, SCI_SETCODEPAGE, CP_UTF8, 0);
+   SendMessage(hwnd, SCI_SETWRAPMODE, SC_WRAP_WORD, 0);
+   SendMessage(hwnd, SCI_STYLECLEARALL, 0, 0);
+   int iStyle = 0;
+   SendMessage(hwnd, SCI_STYLESETFONT, iStyle, (LPARAM)"Segoe UI");
+   SendMessage(hwnd, SCI_STYLESETSIZE, iStyle, (LPARAM)16);
+   SendMessage(hwnd, SCI_STYLESETBOLD, iStyle, (LPARAM)FALSE);
+   SendMessage(hwnd, SCI_STYLESETITALIC, iStyle, (LPARAM)FALSE);
+   SendMessage(hwnd, SCI_STYLESETUNDERLINE, iStyle, (LPARAM)FALSE);
+   SendMessage(hwnd, SCI_STYLESETEOLFILLED, iStyle, (LPARAM)FALSE);
+
+   SendMessage(hwnd, SCI_SETLEXER, SCLEX_NULL, 0);
+   
+   // "日本zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzP TOPTOPTOPTOPTOPTOPZZZZZ IIIIzzzzzI!");
+   SendMessage(hwnd, SCI_REPLACESEL, 0, (LPARAM)"\xe6\x97\xa5\xe6\x9c\xac\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x50\x20\x54\x4f\x50\x54\x4f\x50\x54\x4f\x50\x54\x4f\x50\x54\x4f\x50\x54\x4f\x50\x5a\x5a\x5a\x5a\x5a\x20\x49\x49\x49\x49\x7a\x7a\x7a\x7a\x7a\x49\x21");
+   //SendMessage(hwnd, SCI_SETTEXT, 0,
 }
 
 //
@@ -201,6 +220,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             EndPaint(hWnd, &ps);
         }
         break;
+    case WM_SIZE:
+       {
+         const auto res = DefWindowProc(hWnd, message, wParam, lParam);
+         RECT rc = { 0 };
+         GetClientRect(hWnd, &rc);
+         SetWindowPos(GetDlgItem(hWnd, IDC_EDIT), NULL, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOMOVE | SWP_NOOWNERZORDER);
+         return res;
+       }
+       break;
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
