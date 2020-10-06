@@ -13,6 +13,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <map>
 #include <algorithm>
@@ -49,7 +50,7 @@
 
 using namespace Scintilla;
 
-Caret::Caret() :
+Caret::Caret() noexcept :
 	active(false), on(false), period(500) {}
 
 EditModel::EditModel() : braces{} {
@@ -63,6 +64,7 @@ EditModel::EditModel() : braces{} {
 	highlightGuideColumn = 0;
 	primarySelection = true;
 	imeInteraction = imeWindowed;
+	bidirectional = Bidirectional::bidiDisabled;
 	foldFlags = 0;
 	foldDisplayTextStyle = SC_FOLDDISPLAYTEXT_HIDDEN;
 	hotspot = Range(Sci::invalidPosition);
@@ -78,6 +80,15 @@ EditModel::~EditModel() {
 	pdoc = nullptr;
 }
 
+bool EditModel::BidirectionalEnabled() const noexcept {
+	return (bidirectional != Bidirectional::bidiDisabled) &&
+		(SC_CP_UTF8 == pdoc->dbcsCodePage);
+}
+
+bool EditModel::BidirectionalR2L() const noexcept {
+	return bidirectional == Bidirectional::bidiR2L;
+}
+
 void EditModel::SetDefaultFoldDisplayText(const char *text) {
 	defaultFoldDisplayText = IsNullOrEmpty(text) ? UniqueString() : UniqueStringCopy(text);
 }
@@ -86,7 +97,7 @@ const char *EditModel::GetDefaultFoldDisplayText() const noexcept {
 	return defaultFoldDisplayText.get();
 }
 
-const char *EditModel::GetFoldDisplayText(Sci::Line lineDoc) const {
+const char *EditModel::GetFoldDisplayText(Sci::Line lineDoc) const noexcept {
 	if (foldDisplayTextStyle == SC_FOLDDISPLAYTEXT_HIDDEN || pcs->GetExpanded(lineDoc)) {
 		return nullptr;
 	}
@@ -94,4 +105,3 @@ const char *EditModel::GetFoldDisplayText(Sci::Line lineDoc) const {
 	const char *text = pcs->GetFoldDisplayText(lineDoc);
 	return text ? text : defaultFoldDisplayText.get();
 }
-

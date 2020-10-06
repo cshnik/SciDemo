@@ -14,6 +14,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <map>
 #include <algorithm>
@@ -171,7 +172,7 @@ void MarginView::RefreshPixMaps(Surface *surfaceWindow, WindowID wid, const View
 	}
 }
 
-static int SubstituteMarkerIfEmpty(int markerCheck, int markerDefault, const ViewStyle &vs) {
+static int SubstituteMarkerIfEmpty(int markerCheck, int markerDefault, const ViewStyle &vs) noexcept {
 	if (vs.markers[markerCheck].markType == SC_MARK_EMPTY)
 		return markerDefault;
 	return markerCheck;
@@ -364,9 +365,11 @@ void MarginView::PaintMargin(Surface *surface, Sci::Line topLine, PRectangle rc,
 
 				marks &= vs.ms[margin].mask;
 
-				PRectangle rcMarker = rcSelMargin;
-				rcMarker.top = static_cast<XYPOSITION>(yposScreen);
-				rcMarker.bottom = static_cast<XYPOSITION>(yposScreen + vs.lineHeight);
+				PRectangle rcMarker(
+					rcSelMargin.left,
+					static_cast<XYPOSITION>(yposScreen),
+					rcSelMargin.right,
+					static_cast<XYPOSITION>(yposScreen + vs.lineHeight));
 				if (vs.ms[margin].style == SC_MARGIN_NUMBER) {
 					if (firstSubLine) {
 						std::string sNumber;
@@ -391,11 +394,11 @@ void MarginView::PaintMargin(Surface *surface, Sci::Line topLine, PRectangle rc,
 						}
 						PRectangle rcNumber = rcMarker;
 						// Right justify
-						const XYPOSITION width = surface->WidthText(fontLineNumber, sNumber.c_str(), static_cast<int>(sNumber.length()));
+						const XYPOSITION width = surface->WidthText(fontLineNumber, sNumber);
 						const XYPOSITION xpos = rcNumber.right - width - vs.marginNumberPadding;
 						rcNumber.left = xpos;
 						DrawTextNoClipPhase(surface, rcNumber, vs.styles[STYLE_LINENUMBER],
-							rcNumber.top + vs.maxAscent, sNumber.c_str(), static_cast<int>(sNumber.length()), drawAll);
+							rcNumber.top + vs.maxAscent, sNumber, drawAll);
 					} else if (vs.wrapVisualFlags & SC_WRAPVISUALFLAG_MARGIN) {
 						PRectangle rcWrapMarker = rcMarker;
 						rcWrapMarker.right -= wrapMarkerPaddingRight;
@@ -412,11 +415,12 @@ void MarginView::PaintMargin(Surface *surface, Sci::Line topLine, PRectangle rc,
 						if (firstSubLine) {
 							surface->FillRectangle(rcMarker,
 								vs.styles[stMargin.StyleAt(0) + vs.marginStyleOffset].back);
+							PRectangle rcText = rcMarker;
 							if (vs.ms[margin].style == SC_MARGIN_RTEXT) {
 								const int width = WidestLineWidth(surface, vs, vs.marginStyleOffset, stMargin);
-								rcMarker.left = rcMarker.right - width - 3;
+								rcText.left = rcText.right - width - 3;
 							}
-							DrawStyledText(surface, vs, vs.marginStyleOffset, rcMarker,
+							DrawStyledText(surface, vs, vs.marginStyleOffset, rcText,
 								stMargin, 0, stMargin.length, drawAll);
 						} else {
 							// if we're displaying annotation lines, colour the margin to match the associated document line
@@ -431,25 +435,25 @@ void MarginView::PaintMargin(Surface *surface, Sci::Line topLine, PRectangle rc,
 				if (marks) {
 					for (int markBit = 0; (markBit < 32) && marks; markBit++) {
 						if (marks & 1) {
-							LineMarker::typeOfFold tFold = LineMarker::undefined;
+							LineMarker::FoldPart part = LineMarker::FoldPart::undefined;
 							if ((vs.ms[margin].mask & SC_MASK_FOLDERS) && highlightDelimiter.IsFoldBlockHighlighted(lineDoc)) {
 								if (highlightDelimiter.IsBodyOfFoldBlock(lineDoc)) {
-									tFold = LineMarker::body;
+									part = LineMarker::FoldPart::body;
 								} else if (highlightDelimiter.IsHeadOfFoldBlock(lineDoc)) {
 									if (firstSubLine) {
-										tFold = headWithTail ? LineMarker::headWithTail : LineMarker::head;
+										part = headWithTail ? LineMarker::FoldPart::headWithTail : LineMarker::FoldPart::head;
 									} else {
 										if (model.pcs->GetExpanded(lineDoc) || headWithTail) {
-											tFold = LineMarker::body;
+											part = LineMarker::FoldPart::body;
 										} else {
-											tFold = LineMarker::undefined;
+											part = LineMarker::FoldPart::undefined;
 										}
 									}
 								} else if (highlightDelimiter.IsTailOfFoldBlock(lineDoc)) {
-									tFold = LineMarker::tail;
+									part = LineMarker::FoldPart::tail;
 								}
 							}
-							vs.markers[markBit].Draw(surface, rcMarker, fontLineNumber, tFold, vs.ms[margin].style);
+							vs.markers[markBit].Draw(surface, rcMarker, fontLineNumber, part, vs.ms[margin].style);
 						}
 						marks >>= 1;
 					}

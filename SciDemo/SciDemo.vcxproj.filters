@@ -530,9 +530,6 @@
     <ClCompile Include="..\scintilla\lexers\LexLout.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\scintilla\lexers\LexLPeg.cxx">
-      <Filter>scintilla\lexers</Filter>
-    </ClCompile>
     <ClCompile Include="..\scintilla\lexers\LexLua.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
@@ -715,6 +712,9 @@
     </ClCompile>
     <ClCompile Include="..\scintilla\win32\ScintillaWin.cxx">
       <Filter>scintilla\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\scintilla\lexers\LexRaku.cxx">
+      <Filter>scintilla\lexers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
