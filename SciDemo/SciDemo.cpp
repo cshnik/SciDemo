@@ -165,20 +165,16 @@ void InitDemoSettings(HWND hwnd)
 {
    SendMessage(hwnd, SCI_SETCODEPAGE, CP_UTF8, 0);
    SendMessage(hwnd, SCI_SETWRAPMODE, SC_WRAP_WORD, 0);
-   SendMessage(hwnd, SCI_STYLECLEARALL, 0, 0);
-   int iStyle = 0;
+   const int iStyle = STYLE_DEFAULT;
    SendMessage(hwnd, SCI_STYLESETFONT, iStyle, (LPARAM)"Segoe UI");
    SendMessage(hwnd, SCI_STYLESETSIZE, iStyle, (LPARAM)16);
-   SendMessage(hwnd, SCI_STYLESETBOLD, iStyle, (LPARAM)FALSE);
-   SendMessage(hwnd, SCI_STYLESETITALIC, iStyle, (LPARAM)FALSE);
-   SendMessage(hwnd, SCI_STYLESETUNDERLINE, iStyle, (LPARAM)FALSE);
-   SendMessage(hwnd, SCI_STYLESETEOLFILLED, iStyle, (LPARAM)FALSE);
-
    SendMessage(hwnd, SCI_SETLEXER, SCLEX_NULL, 0);
+   SendMessage(hwnd, SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DEFAULT/*SC_TECHNOLOGY_DIRECTWRITE*/, 0);
+   SendMessage(hwnd, SCI_SETFONTQUALITY, SC_EFF_QUALITY_LCD_OPTIMIZED, 0);
    
    // "日本zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzP TOPTOPTOPTOPTOPTOPZZZZZ IIIIzzzzzI!");
+   SendMessage(hwnd, SCI_STYLECLEARALL, 0, 0);
    SendMessage(hwnd, SCI_REPLACESEL, 0, (LPARAM)"\xe6\x97\xa5\xe6\x9c\xac\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x7a\x50\x20\x54\x4f\x50\x54\x4f\x50\x54\x4f\x50\x54\x4f\x50\x54\x4f\x50\x54\x4f\x50\x5a\x5a\x5a\x5a\x5a\x20\x49\x49\x49\x49\x7a\x7a\x7a\x7a\x7a\x49\x21");
-   //SendMessage(hwnd, SCI_SETTEXT, 0,
 }
 
 //
